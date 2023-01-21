@@ -1,0 +1,70 @@
+version: '3'
+
+volumes:
+  local_postgres_data: {}
+  local_postgres_data_backups: {}
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/local/Dockerfile
+    image: webcast_local_django
+    container_name: webcast-django
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.env
+#      - ./.envs/.local/.django
+#      - ./.envs/.local/.postgres
+    ports:
+      - "8000:8000"
+    command: /start
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/dev/postgres/Dockerfile
+    image: webcast_local_postgres
+    container_name: webcast-postgres
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data:Z
+      - local_postgres_data_backups:/backups:z
+    env_file:
+      - ./.env
+#      - ./.envs/.local/.postgres
+
+  redis:
+    image: redis:alpine
+    container_name: webcast-redis
+    restart: unless-stopped
+
+  celeryworker:
+    <<: *django
+    image: webcast_local_celeryworker
+    container_name: webcast-celeryworker
+    depends_on:
+      - redis
+      - postgres
+    ports: []
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: webcast_local_celerybeat
+    container_name: webcast-celerybeat
+    depends_on:
+      - redis
+      - postgres
+    ports: []
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: webcast_local_flower
+    container_name: webcast-flower
+    ports:
+      - "5555:5555"
+    command: /start-flower
