@@ -12,6 +12,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic import TemplateView
+from webcast.webcast_back.views import HomeView,AboutView
 
 from . import api_urls
 from .base import views as base_views
@@ -29,7 +30,8 @@ handler500 = base_views.server_error
 # Top Level Pages
 # ==============================================================================
 urlpatterns: "URLList" = [
-    path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
+    path("", HomeView.as_view(template_name="pages/webcast/index.html"), name="index"),
+    path("about-me", AboutView.as_view(template_name="pages/webcast/course/index.html"), name="home"),
     path(
         "about/", TemplateView.as_view(template_name="pages/about.html"), name="about"
     ),
